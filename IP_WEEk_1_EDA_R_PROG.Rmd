@@ -1,0 +1,226 @@
+---
+title: "R-Programming_EDA_Week1_IP"
+author: "RuthNguli"
+date: '2022-03-18'
+output:
+  html_document:
+    df_print: paged
+---
+
+
+## Defining the Question
+
+To identify which individuals are most likely to click on an online cryptography course ads.
+
+## Metric for success
+
+The metric of success will be attained on identifying individuals who click on the ads.
+
+## Understanding the business context
+
+Cryptography is an indispensable tool for protecting information in computer systems. A cryptography course teaches how the cryptographic system a works and its real world application.  
+
+## Experimental Design
+
+Define the question, the metric for success, the context, experimental design taken.
+
+Read and explore the given dataset.
+
+Cleaning Data
+
+Perform Exploratory Data Cleaning (Univariate & Bivariate)
+
+Conclusion
+
+Recommendations
+
+## 1. Reading data
+```{r}
+# read data from url: http://bit.ly/IPAdvertisingData
+# load data
+#
+library(tidyverse)
+ads <- read.csv("http://bit.ly/IPAdvertisingData")
+
+# preview head of the data
+#
+head(ads)
+```
+```{r}
+# previewing the tail of the data
+#
+tail(ads)
+
+```
+```{r}
+# checking column names
+#
+colnames(ads)
+```
+```{r}
+# Checking the data has appropriate data types
+#
+str(ads)
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+*The advertising data has 1000 rows and 10 columns*
+*Column Male and Clicked.on.Ad are represented as integer however should be converter to factor as they are represnting categorical variables*
+
+
+## Data Cleaning
+```{r}
+# change data types of Male and Clicked.on.Ad columns from int to factor
+#
+ads$Male <- as.factor(ads$Male)
+ads$Clicked.on.Ad <- as.factor(ads$Clicked.on.Ad)
+
+# confirming if the changes have made successfully
+#
+str(ads)
+```
+```{r}
+#Extracting and creating Date column from timestamp
+#
+ads$Date <- as.Date(ads$Timestamp)
+glimpse(ads)
+
+```
+```{r}
+
+
+```
+
+```{r}
+# Checking missing values
+#
+library(Amelia)
+missmap(ads)
+```
+*Our dataset does not have any missing values*
+
+```{r}
+# Checking for any duplicates
+#
+sum(duplicated(ads))
+```
+*There are no duplicates*
+
+```{r}
+# Checking for outliers
+# 
+non_char <- ads %>% select(Daily.Time.Spent.on.Site, Age, Area.Income, Daily.Internet.Usage, Male,Clicked.on.Ad, Date)
+boxplot(non_char)
+```
+*There a few identifiable outliers in Area.Income column, we leave them as they represent real data.*
+```{r}
+# Checking the summarry of dataset
+#
+summary(ads)
+```
+## Bivariate analysis
+```{r}
+# Attaching ads data to R 
+#
+attach(ads)
+# Plotting a histogram of Daily Time spent on site
+hist(Daily.Time.Spent.on.Site, col='pink')
+```
+*Most time spent on site is between 65 and 80*
+```{r}
+#Plotting a histogram of Age
+#
+hist(Age, col='pink')
+```
+*Most participants are aged between 25 and 40 years old*
+```{r}
+# plotting a histogramof Area income
+#
+hist(Area.Income, col="pink")
+```
+*Income is skewed to the left. Most participants had income between 50,000 and 70,000*
+
+```{r}
+# A bar plot of Male Partipation
+#
+barplot(table(Male), col="pink", main="Bar Plot of Male distribution")
+```
+*Male participants were slightly fewer than those not male*
+```{r}
+# A bar plot of Clicked on Ads
+#
+barplot(table( Clicked.on.Ad), col="pink", main="A Bar plot of Clicked on Ads")
+```
+*There is equal distribution between those who clicked and those didn't click on AD*
+
+```{r}
+# Plotting a Histogram of Daily internet usage
+#
+hist(Daily.Internet.Usage, col="pink")
+```
+## Bivariate Analysis
+```{r}
+colnames(ads)
+```
+
+```{r}
+# A Boxplot of clicked on ad vs Time spent on ad
+#
+plot(Daily.Time.Spent.on.Site ~ Clicked.on.Ad, data = ads, col="pink", main="A Box Plot of Daily time spent on site vs Clicked on Ad")
+```
+* Most people who clicked on ads did not spent much time on site*
+```{r}
+# A scatter-plot of Age Vs Clicked on ads
+#
+ggplot(ads,aes(Age,Clicked.on.Ad, colour= Clicked.on.Ad))+
+  geom_point(size=3)
+```
+*Those who clicked on ads are aged between 20  and 60.*
+```{r}
+# A Scatter plot of Date Vs Daily time spent on site
+#
+ads %>% ggplot(aes(Date,Daily.Time.Spent.on.Site, colour = Clicked.on.Ad))+
+  geom_point(size=3, alpha = 0.5)+geom_smooth(method=lm, se= F)
+```
+*Majority of those who clicked on ad through Jan to July spent less time online*
+```{r}
+# A scatter plot of Age VS time spent on site
+#
+ads %>% ggplot(aes(Age,Daily.Time.Spent.on.Site, colour = Clicked.on.Ad))+
+  geom_point(size=3, alpha = 0.5)+geom_smooth(method=lm, se= F)
+```
+*Most people who clicked on ads are aged between 30 -50 years and they spent much less time online*
+```{r}
+# A scatter plot of random selected countries VS Ages
+#
+filter(ads, Country %in% c("Cuba","Tunisia","Korea","Peru","Thailand","Greece","Senrgal","Ukraine","Australia")) %>%
+  ggplot(aes(Age,Country , colour=Clicked.on.Ad)) +
+  geom_point()
+```
+
+*Most Countries the people who click on ads are 30yrs and above*
+```{r}
+# A scatter plot of Age VS time spent on site
+#
+ads %>% ggplot(aes(Area.Income,Daily.Time.Spent.on.Site, colour = Clicked.on.Ad))+
+  geom_point(size=3, alpha = 0.5)+geom_smooth(method=lm, se= F)
+```
+
+```{r}
+Num <- ads %>% select(Daily.Time.Spent.on.Site, Age, Area.Income, Daily.Internet.Usage)
+
+corr <- cor(Num)
+
+corr
+```
+*Daily internet usage is positively corr to daily time spent online 0.52 , Age is negatively corr to time spent online -0.37*
+
+## Conclusion
+Ads are mostly clicked: Those aged between 30 and 60 years
+                        Those who spent less time online
+                        Ads are clicked  through out the months.
+                        
+## Recommendations
+Its Recommend that to target age group between 30 and 60, have a well detailed and well explained advert as those who click on ads do spent much time on site and make sure advert run through out the year
