@@ -1,10 +1,11 @@
 # R_Programming_EDA
-# Business context
-
-Cryptography is an indispensable tool for protecting information in computer systems. A cryptography course teaches how the cryptographic system a works and its real world application.
 
 # Objective
 To identify which individuals are most likely to click on an online cryptography course ads.
+
+# Business context
+
+Cryptography is an indispensable tool for protecting information in computer systems. A cryptography course teaches how the cryptographic system a works and its real world application.
 
 # Experimental Design
 
