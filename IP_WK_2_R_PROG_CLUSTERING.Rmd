@@ -1,0 +1,461 @@
+---
+title: "R_Programming_week_2_IP_(CLUSTERING)"
+author: "Ruth Nguli"
+date: '2022-03-24'
+output: pdf_document
+---
+## Defining the Question
+
+To understand customer’s behavior from data that collected over the past year. 
+
+## Metric for success
+
+The metric of success will be attained on identifying the characteristics of customer groups.
+
+## Understanding the business context
+
+Kira Plastinina is a Russian brand that is sold through a defunct chain of retail stores in Russia, Ukraine, Kazakhstan, Belarus, China, Philippines, and Armenia.
+
+## Experimental Design
+
+Define the question, the metric for success, the context, experimental design taken.
+
+Read and explore the given dataset.
+
+Cleaning Data
+
+Perform Exploratory Data Cleaning (Univariate & Bivariate)
+
+create a Clustering model
+
+Conclusion
+
+Recommendations
+
+## Data Source
+
+The dataset source link: http://bit.ly/EcommerceCustomersDataset
+
+## Reading Data
+
+```{r}
+# Loading and reading data from source link
+#
+library(tidyverse)
+brand <- read.csv("http://bit.ly/EcommerceCustomersDataset")
+
+# Previewing the head of data
+#
+head(brand)
+```
+```{r}
+# Previewing tail of data
+#
+tail(brand)
+
+```
+```{r}
+# Checking the data structure 
+#
+str(brand)
+```
+*The dataset has 12330 observations (rows) and 18 variables(columns)
+*The data types are appropriately represented
+
+```{r}
+# Looking at the columns
+#
+library(tidyverse)
+colnames(brand)
+```
+## Data Cleaning
+
+```{r}
+# looking at data summary 
+#
+summary(brand)
+
+```
+* there are some NA values which will need be imputed
+
+```{r}
+## Calling Amelia and mice libraries for data imputation
+#
+library(Amelia)
+library(mice)
+library(VIM)
+```
+```{r}
+## Confirming if the data has missing
+#
+mapply(anyNA,brand)
+```
+
+```{r}
+# Imputing the missing values by predicting missing values with mice package
+# 
+
+miss_mod <- mice(brand[, c("Administrative" , "Administrative_Duration", "Informational", "Informational_Duration", "ProductRelated", "ProductRelated_Duration", "BounceRates", "ExitRates")], method='rf')
+
+completed <- complete(miss_mod)
+
+```
+```{r}
+# placing predicted missing values into the main data set
+# ---
+# 
+brand$Administrative <- completed$Administrative
+brand$Administrative_Duration <- completed$Administrative_Duration
+brand$Informational <- completed$Informational
+brand$Informational_Duration <- completed$Informational_Duration
+brand$ProductRelated <- completed$ProductRelated
+brand$ProductRelated_Duration <- completed$ProductRelated_Duration
+brand$BounceRates <- completed$BounceRates
+brand$ExitRates <- completed$ExitRates
+
+```
+
+```{r}
+# confirming if there no more missing values
+# 
+anyNA(brand)
+```
+```{r}
+# checking duplicates
+#
+anyDuplicated(brand)
+
+```
+*presence of duplicates
+
+```{r}
+# Dropping duplicated
+#
+brand <- brand %>% distinct()
+
+# confirming if duplicates were successfully dropped
+#
+anyDuplicated(brand)
+```
+*Successfully dropped duplicates in the data*
+
+```{r}
+# checking outliers
+#
+non_cat <- brand %>% select("Administrative" , "Administrative_Duration", "Informational", "Informational_Duration", "ProductRelated", "ProductRelated_Duration", "BounceRates", "ExitRates", "PageValues", "SpecialDay", "OperatingSystems",  "Browser", "Region", "TrafficType")
+boxplot(non_cat)
+
+```
+*There are noticeable outliers which represent real time data.
+
+## Univariate Analysis
+
+```{r}
+# Plotting a Histograms of Administrative and duration
+#
+attach(brand)
+hist(Administrative, col="pink")
+hist(Administrative_Duration, col="pink")
+```
+
+*Administrative is skewed to the right. Majority of the visitors did not visit the Administrative page.
+*Majority of the visitors spend less time on the page.
+
+
+```{r}
+# Plotting a Histograms of Informational and duration
+#
+hist(Informational, col="pink")
+hist(Informational_Duration, col="pink")
+
+```
+
+* Informational and Informational_Duration are skewed to the right.
+* most visitors did not visit the Informational page. 
+* most visitors who visited the page spend less time on the page.
+
+```{r}
+## Plotting  Histograms of Product related and duration
+#
+hist(ProductRelated, col="pink")
+hist(ProductRelated_Duration, col="pink")
+```
+
+* ProductRelated and ProductRelated_Duration are skewed to the right.
+* most visitors did not visit the ProductRelated page. 
+* most visitors who visited the page spend less time on the page.
+
+```{r}
+## Plotting  Histograms of BounceRate and ExitRate
+#
+hist(BounceRates, col="pink")
+hist(ExitRates, col="pink")
+```
+* Bounce rate at 0.00.has the highest frequency.
+* ExitRate was happening between 0.00 and 0.05 rate.
+
+```{r}
+## Plotting  Histograms of Pagevalue and Special day
+#
+#
+ggplot(brand, aes(x=reorder(SpecialDay, SpecialDay, function(x)-length(x)))) +
+geom_bar(fill='pink') +  labs(x='SpecialDay')
+```
+
+```{r}
+## Plotting  Bar plot of Month
+#
+ggplot(brand, aes(x=reorder(Month, Month, function(x)-length(x)))) +
+geom_bar(fill='pink') +  labs(x='Month')
+
+```
+* most customers visited the pages in the months of May,Nov,March and Dec.
+
+```{r}
+## Plotting  Bar plot of OperatingSystems
+#
+ggplot(brand, aes(x=reorder(OperatingSystems, OperatingSystems, function(x)-length(x)))) +
+geom_bar(fill='pink') +  labs(x='Operating Systems')
+```
+* most visitors used 2 different operating systems to access the brand's pages.
+
+```{r}
+## Plotting  Bar plot of Browser
+#
+ggplot(brand, aes(x=reorder(Browser, Browser, function(x)-length(x)))) +
+geom_bar(fill='pink') +  labs(x='browser')
+```
+* most visitors used 2 different Browsers to access the brand's pages.
+
+```{r}
+## Plotting  Bar plot of Region
+#
+ggplot(brand, aes(x=reorder(Region, Region, function(x)-length(x)))) +
+geom_bar(fill='pink') +  labs(x='Region')
+```
+* most customers accessed the brand's pages from the one region.
+
+```{r}
+## Plotting  Bar plot of TrafficType
+#
+ggplot(brand, aes(x=reorder(TrafficType, TrafficType, function(x)-length(x)))) +
+geom_bar(fill='pink') +  labs(x='TrafficType')
+
+```
+* Most of the visitors had between 1 & 3 traffic types.
+
+```{r}
+## Plotting  Bar plot of VisitorType
+#
+ggplot(brand, aes(x=reorder(VisitorType, VisitorType, function(x)-length(x)))) +
+geom_bar(fill='pink') +  labs(x='Visitor Type')
+```
+* Majority of page visitors were returning visitors
+
+```{r}
+## Plotting  Bar plot of Weekend
+#
+ggplot(brand, aes(x=reorder(Weekend, Weekend, function(x)-length(x)))) +
+geom_bar(fill='pink') +  labs(x='Weekend')
+```
+* we observe that most page visits were on weekdays.
+
+```{r}
+## Plotting  Bar plot of Revenue
+#
+ggplot(brand, aes(x=reorder(Revenue, Revenue, function(x)-length(x)))) +
+geom_bar(fill='pink') +  labs(x='Revenue')
+```
+* We observe most of the visits in the brand's pages did not generate any revenue.
+
+## Bivariate Analysis
+
+```{r}
+# Administrative Vs Revenue
+#
+ggplot(brand,aes(Administrative, Revenue, colour= Revenue))+
+  geom_step(size=3)
+
+```
+
+```{r}
+# Informational Vs Revenue
+#
+ggplot(brand,aes(Informational, Revenue, colour= Revenue))+
+  geom_step(size=3)
+
+```
+```{r}
+# ProductRelated Vs Revenue
+#
+ggplot(brand,aes(ProductRelated, Revenue, colour= Revenue))+
+  geom_step(size=3)
+
+```
+* We observe that most of Administrative,Informational & ProductRelated page visits did not generate much revenue.
+
+```{r}
+# ExitRate Vs Revenue
+#
+ggplot(brand,aes(ExitRates, Revenue, colour= Revenue))+
+  geom_point(size=3)
+
+```
+```{r}
+# Bouncerate Vs Revenue
+#
+ggplot(brand,aes(BounceRates, Revenue, colour= Revenue))+
+  geom_point(size=3)
+
+```
+```{r}
+# Pagevalues Vs Month
+#
+ggplot(brand,aes(PageValues, Month, colour= Revenue))+
+  geom_point(size=3)
+
+``` 
+* Page value mostly attracted revenue through out the year.
+
+```{r}
+# Month Vs Specialday,  Revenue
+#
+ggplot(brand,aes(SpecialDay, Month, colour= Revenue))+
+  geom_point(size=3)
+
+```
+* Revenue was generated on special day in the months of June and July
+
+```{r}
+# OperatingSytems Vs Month
+#
+ggplot(brand,aes(OperatingSystems, Month, colour= Weekend))+
+  geom_point(size=3)
+
+``` 
+* 
+```{r}
+# Pagevalues Vs Month
+#
+ggplot(brand,aes(VisitorType, Month, colour= Revenue))+
+  geom_point(size=3)
+
+``` 
+## Modelling
+
+```{r}
+# converting months to numeric
+#
+brand$Month <- match(Month,month.abb)
+tail(brand)
+```
+
+```{r}
+# Removing class label before label encoding
+# 
+df <- brand[,c(1:17)]
+head(df)
+
+
+```
+
+
+
+```{r}
+# Standardising the data 
+#
+data <- df %>% select(-VisitorType, -Weekend, -Month) %>%  scale()
+head(data)
+```
+## K-Means Clustering
+
+```{r}
+# Determining the optimal value of k
+#
+library(factoextra)
+fviz_nbclust(data, kmeans, method= "silhouette")
+```
+* The optimal k value is 3.
+
+```{r}
+# Applying the K-means at k=3
+# ---
+# 
+k_clust<- kmeans(data,3) 
+
+# Previewing the no. of records in each cluster
+# 
+k_clust$size
+
+
+```
+```{r}
+# Visualizing the  clustering results
+#
+fviz_cluster(kmeans(data, centers = 3), data = data)
+```
+```{r}
+# displaying the results in a table
+#
+brand.class<- brand[, "VisitorType"]
+table(k_clust$cluster, brand.class)
+```
+
+## Hierarchical
+
+```{r}
+# computing the Euclidean distance between observations, 
+#
+df <- dist(data, method = "euclidean")
+
+# hierarchical clustering using the complete method
+# 
+hc <- hclust(df, method = "complete" )
+
+hc
+
+```
+
+```{r}
+# plotting adendrogram
+# 
+plot(hc)
+rect.hclust(hc, k = 10, border = 2:5)
+
+```
+
+## DBSCAN Clustering
+
+```{r}
+# getting optimum eps
+#
+library(fpc)
+library(dbscan)
+kNNdistplot(data, k=3) 
+abline(h = 3, lty=2)
+```
+
+```{r}
+# Applying dbscan algorithm with the optimal eps = 3
+#
+db <- dbscan(data,eps=3,MinPts = 4)
+db
+```
+
+```{r}
+# Plotting DBSCAN
+#
+
+hullplot(data,db$cluster)
+```
+
+```{r}
+#dispalying the cluster results in a table
+
+table(db$cluster, brand.class)
+```
+## conclusion
+
+We conclude that returning visitors are most likely to generate revenue 
+Pagevalue through out the year showed revenue was being genenaated.
+

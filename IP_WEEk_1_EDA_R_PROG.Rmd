@@ -30,6 +30,8 @@ Cleaning Data
 
 Perform Exploratory Data Cleaning (Univariate & Bivariate)
 
+Modelling
+
 Conclusion
 
 Recommendations
@@ -88,10 +90,7 @@ ads$Date <- as.Date(ads$Timestamp)
 glimpse(ads)
 
 ```
-```{r}
 
-
-```
 
 ```{r}
 # Checking missing values
@@ -216,6 +215,84 @@ corr <- cor(Num)
 corr
 ```
 *Daily internet usage is positively corr to daily time spent online 0.52 , Age is negatively corr to time spent online -0.37*
+
+## Modelling
+```{r}
+ads$Clicked.on.Ad <- as.numeric(Clicked.on.Ad) 
+```
+
+```{r}
+## KNN model
+# performing normalization
+normal <- function(x) (
+  return( ((x - min(x)) /(max(x)-min(x))) )
+)
+
+data <- ads[1:10]
+
+ads_norm <- as.data.frame(lapply(data%>% select(-Timestamp,-Country,-City,-Ad.Topic.Line,-Male,-Clicked.on.Ad), normal))
+ads_norm
+```
+```{r}
+set.seed(55) # to get same random sample
+
+# selecting 70% of the data
+ads_samp <- sample(1:nrow(ads_norm), size = nrow(ads_norm)*0.7,replace=FALSE)
+```
+```{r}
+# getting 70% train and 30 % test data X(Independent)
+X_train<- data[ads_samp,]
+X_test <- data[-ads_samp,]
+
+```
+
+
+```{r}
+# Creating train and test dataset for y (dependent)
+y_train <- data[ads_samp,10]
+y_test <- data[-ads_samp,10]
+
+```
+
+
+```{r}
+library(class)
+# Applying k-NN classification algorithm.
+# No. of neighbours are generally square root of total number of instances
+neigh<- round(sqrt(NROW(y_train)))+1 # here we want to have the number y_training data 
+# Applying the knn algorithm
+model<- knn(train = X_train,  test = X_test, cl = y_train, k = neigh) 
+
+
+```
+
+```{r}
+# getting a confussion matrix
+library(caret)
+
+confusionMatrix(table(y_test, model))
+```
+
+```{r}
+# Calculating the Accuracy
+mean(y_test== model)*100
+```
+
+```{r}
+# Tuning the model
+i = 1  #initiating a loop
+k.optm = 1
+for (i in 1:25) {
+  model<- knn(train = X_train,  test = X_test, cl=y_train, k=i)
+  k.optm[i] <- mean(y_test== model)*100
+  k=i
+  cat(k ,"=", k.optm[i],'\n')   # to print accuracy
+  
+}
+
+plot(k.optm, type="b", xlab="k- values", ylab="Accuracy levels") #to print optimum accuracy level
+```
+
 
 ## Conclusion
 Ads are mostly clicked: Those aged between 30 and 60 years
